@@ -302,6 +302,7 @@ typedef struct {
 	int (*widthfunc)(Bar *bar, BarArg *a);
 	int (*drawfunc)(Bar *bar, BarArg *a);
 	int (*clickfunc)(Bar *bar, Arg *arg, BarArg *a);
+	int (*hoverfunc)(Bar *bar, BarArg *a, XMotionEvent *ev);
 	char *name; // for debugging
 	int x, w; // position, width for internal use
 } BarRule;
@@ -491,6 +492,11 @@ struct Monitor {
 	Client *lastsel;
 	const Layout *lastlt;
 	#endif // IPC_PATCH
+	#if BAR_TAGPREVIEW_PATCH
+	Window tagwin;
+	int previewshow;
+	Pixmap tagmap[NUMTAGS];
+	#endif // BAR_TAGPREVIEW_PATCH
 };
 
 typedef struct {
@@ -1253,6 +1259,13 @@ cleanupmon(Monitor *mon)
 	#if PERTAG_PATCH
 	free(mon->pertag);
 	#endif // PERTAG_PATCH
+	#if BAR_TAGPREVIEW_PATCH
+	for (size_t i = 0; i < NUMTAGS; i++)
+		if (mon->tagmap[i])
+			XFreePixmap(dpy, mon->tagmap[i]);
+	XUnmapWindow(dpy, mon->tagwin);
+	XDestroyWindow(dpy, mon->tagwin);
+	#endif // BAR_TAGPREVIEW_PATCH
 	free(mon);
 }
 
@@ -2531,10 +2544,21 @@ motionnotify(XEvent *e)
 {
 	static Monitor *mon = NULL;
 	Monitor *m;
+	Bar *bar;
 	#if LOSEFULLSCREEN_PATCH
 	Client *sel;
 	#endif // LOSEFULLSCREEN_PATCH
 	XMotionEvent *ev = &e->xmotion;
+
+	if ((bar = wintobar(ev->window))) {
+		barhover(e, bar);
+		return;
+	}
+
+	#if BAR_TAGPREVIEW_PATCH
+	if (selmon->previewshow != 0)
+		hidetagpreview(selmon);
+	#endif // BAR_TAGPREVIEW_PATCH
 
 	if (ev->window != root)
 		return;
@@ -3629,6 +3653,9 @@ setup(void)
 
 	updatebars();
 	updatestatus();
+	#if BAR_TAGPREVIEW_PATCH
+	updatepreview();
+	#endif // BAR_TAGPREVIEW_PATCH
 
 	/* supporting window for NetWMCheck */
 	wmcheckwin = XCreateSimpleWindow(dpy, root, 0, 0, 1, 1, 0, 0, 0);
@@ -4069,6 +4096,9 @@ toggleview(const Arg *arg)
 	#if !EMPTYVIEW_PATCH
 	if (newtagset) {
 	#endif // EMPTYVIEW_PATCH
+		#if BAR_TAGPREVIEW_PATCH
+		tagpreviewswitchtag();
+		#endif // BAR_TAGPREVIEW_PATCH
 		selmon->tagset[selmon->seltags] = newtagset;
 
 		#if PERTAG_PATCH
@@ -4266,7 +4296,11 @@ updatebars(void)
 		#else
 		.background_pixmap = ParentRelative,
 		#endif // BAR_ALPHA_PATCH
+		#if BAR_TAGPREVIEW_PATCH
+		.event_mask = ButtonPressMask|ExposureMask|PointerMotionMask
+		#else
 		.event_mask = ButtonPressMask|ExposureMask
+		#endif // BAR_TAGPREVIEW_PATCH
 	};
 	XClassHint ch = {"dwm", "dwm"};
 	for (m = mons; m; m = m->next) {
@@ -4658,6 +4692,9 @@ view(const Arg *arg)
 		#endif // TOGGLETAG_PATCH
 		return;
 	}
+	#if BAR_TAGPREVIEW_PATCH
+	tagpreviewswitchtag();
+	#endif // BAR_TAGPREVIEW_PATCH
 	selmon->seltags ^= 1; /* toggle sel tagset */
 	#if PERTAG_PATCH
 	pertagview(arg);

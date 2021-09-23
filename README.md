@@ -17,6 +17,8 @@ If you are experiencing issues then you may want to check out the [Known Issues]
 
 ### Changelog:
 
+2021-09-23 - Added the tagpreview patch
+
 2021-09-08 - Added the alwayscenter patch
 
 2021-07-27 - Added the winicon patch
@@ -708,6 +710,9 @@ If you are experiencing issues then you may want to check out the [Known Issues]
 
    - [tagothermonitor](https://dwm.suckless.org/patches/tagothermonitor/)
       - adds functions and keybindings to tag a window to a desired tag on an adjacent monitor
+
+   - [tagpreview](https://dwm.suckless.org/patches/tag-previews/)
+      - shows a preview of a tag when hovering the tag icon using the mouse
 
    - [tagswapmon](https://github.com/bakkeby/patches/wiki/tagswapmon/)
       - swap all visible windows on one monitor with those of an adjacent monitor
