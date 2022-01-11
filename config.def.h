@@ -816,7 +816,12 @@ static const char *dmenucmd[] = {
 	#endif // BAR_DMENUMATCHTOP_PATCH
 	NULL
 };
-static const char *termcmd[]  = { "st", NULL };
+
+/* commands */
+static const char *termcmd[]  = { "alacritty", NULL };
+static const char *emacscmd[] = { "emacsclient", "-c", "-a emacs", NULL };
+static const char *zoterocmd[] = { "zotero", NULL };
+static const char *googleChromecmd[] = { "google-chrome-stable", NULL };
 
 #if BAR_STATUSCMD_PATCH
 #if BAR_DWMBLOCKS_PATCH
@@ -848,7 +853,12 @@ static Key keys[] = {
 	{ MODKEY,                       XK_Escape,     setkeymode,             {.ui = COMMANDMODE} },
 	#endif // KEYMODES_PATCH
 	{ MODKEY,                       XK_p,          spawn,                  {.v = dmenucmd } },
-	{ MODKEY|ShiftMask,             XK_Return,     spawn,                  {.v = termcmd } },
+        //application write by Boyang Yan
+	{ MODKEY,                       XK_e, 	   spawn,          {.v = emacscmd } },
+	{ MODKEY,                       XK_z,      spawn,          {.v = zoterocmd } },
+	{ MODKEY,                       XK_g,      spawn,          {.v = googleChromecmd } },
+        { ControlMask|ShiftMask,              XK_p,      spawn,          SHCMD("screenshot") },
+	{ MODKEY,             XK_Return,     spawn,                  {.v = termcmd } },
 	#if RIODRAW_PATCH
 	{ MODKEY|ControlMask,           XK_p,          riospawnsync,           {.v = dmenucmd } },
 	{ MODKEY|ControlMask,           XK_Return,     riospawn,               {.v = termcmd } },
